@@ -52,7 +52,7 @@ void loop(){
       if (pirState == HIGH){
       // we have just turned of
      // Serial.println("Motion ended!");
-      lcd.print("Motion ended!");
+      lcd.print("Motion Terminated!");
       delay(5000);
       lcd.clear();
       // We only want to print on the output change, not state
