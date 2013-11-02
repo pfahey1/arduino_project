@@ -9,7 +9,7 @@
 
 // include the library code:
 
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+LiquidCrystal lcd(A5, A4, A3, A2, A1, A0);
  
 int ledPin = 13;                // choose the pin for the LED
 int inputPin = 8;               // choose the input pin (for PIR sensor)
@@ -58,7 +58,7 @@ void loop()
       {
       // we have just turned of
      // Serial.println("Motion ended!");
-      lcd.print("Motion Terminated!");
+      lcd.print("Motion finished!");
       delay(5000);
       lcd.clear();
       // We only want to print on the output change, not state
