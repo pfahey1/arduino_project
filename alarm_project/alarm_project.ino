@@ -1,17 +1,11 @@
-
-
-// Uses a PIR sensor to detect movement, buzzes a buzzer
-// more info here: http://blog.makezine.com/projects/pir-sensor-arduino-alarm/
-// email me, John Park, at jp@jpixl.net
-// based upon:
-// PIR sensor tester by Limor Fried of Adafruit
-// tone code by michael@thegrebs.com
-
-// include the library code:
+//Arduino Alarm Project
+//Paul Fahey
+//Computer Architecture
 
 #include <LiquidCrystal.h>
 #include <Password.h> 
 #include <Keypad.h> 
+#include <pitches.h>
 
 const byte ROWS = 4; // Four rows
 const byte COLS = 3; //  columns
@@ -34,13 +28,13 @@ int pirState = LOW;             // we start, assuming no motion detected
 int val = 0;                    // variable for reading the pin status
 int pinSpeaker = 10;           //Set up a speaker on a PWM pin (digital 9, 10, or 11)
 
+
 LiquidCrystal lcd(A5, A4, A3, A2, A1, A0);
-Password password = Password( "1234" );
+Password arm_password = Password( "1234" );
+Password disarm_password = Password("4321");
 
 // Create the Keypad
 Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
-
-boolean disarm = password.evaluate();
 
 void setup() 
 {
@@ -54,17 +48,18 @@ void setup()
   lcd.print("Type Password");
   lcd.setCursor(0,1);
   lcd.print("To Arm System");
+ 
  }
 
 void loop()
 {   
     
-     keypad.getKey(); 
+     keypad.getKey();
       
 } //end of main loop
 
 // duration in mSecs, frequency in hertz
-void playTone(long duration, int freq) 
+void playTone( long duration, int freq) 
 {
     duration *= 1000;
     int period = (1.0 / freq) * 1000000;
@@ -73,11 +68,13 @@ void playTone(long duration, int freq)
     while (elapsed_time < duration) 
     {
         digitalWrite(pinSpeaker,HIGH);
-        delayMicroseconds(period / 2);
+        delayMicroseconds(period / 2);  
         digitalWrite(pinSpeaker, LOW);
         delayMicroseconds(period / 2);
         elapsed_time += (period);
+     
     }
+    
 }
 
 void keypadEvent(KeypadEvent eKey)
@@ -91,58 +88,112 @@ void keypadEvent(KeypadEvent eKey)
 	lcd.print(eKey);
 	switch (eKey)
         {
-	  case '*': checkPassword(); break;
+	  case '*': check_armed_password(); break;
           
-	  case '#': password.reset(); break;
-	  default: password.append(eKey);
+	  case '#': check_disarm_password(); break;
+	  default: arm_password.append(eKey);
+                    disarm_password.append(eKey);
         }
   }
 }
 
-void checkPassword()
+void check_armed_password()
 {
   
-  if (password.evaluate())
+  if (arm_password.evaluate())
   {
     lcd.print("Success!");
     delay(3000);
     lcd.clear();
     lcd.print("System Armed"); 
-   
-    //Add code to run if it works
-    while (password.evaluate())
     
+    //Add code to run if it works
+    while (arm_password.evaluate() )
     {
-      setOffSystem();
+      val = digitalRead(inputPin);  // check if the input is HIGH
       
-      if(disarm)
-      {
-        break;
-      }
-    }
-        
-  }    
+       if (val == HIGH) 
+        {        
+            digitalWrite(ledPin, HIGH);  // turn LED ON
+          //  playTone(300, 160);   
+     
+            delay(150);
+             lcd.clear();
+              lcd.print("Motion detected!");
+              delay(3000);
+              lcd.setCursor(0,1);
+              lcd.print("Intruder!");
+              arm_password.reset();
+              disarm_password.reset();
+           }  
+    }  
+  }
   
   else
   {
     lcd.print("Wrong Password");
-    delay(5000);
+    delay(3000);
     lcd.clear();
+    arm_password.reset();
+    disarm_password.reset();
+  lcd.print("Type Password");
+  lcd.setCursor(0,1);
+  lcd.print("To Arm System");
     //add code to run if it did not work
   }
 }
 
+void check_disarm_password()
+{
+  
+  if (disarm_password.evaluate())
+  {
+    digitalWrite(ledPin, LOW);
+    digitalWrite(pinSpeaker, LOW);
+    lcd.print("Success!");
+    delay(3000);
+    lcd.clear();
+    lcd.print("System Disarmed");
+   delay(3000); 
+   lcd.clear();
+   arm_password.reset();
+    disarm_password.reset();
+    lcd.print("Type Password");
+  lcd.setCursor(0,1);
+  lcd.print("To Arm System");
+      
+  }
+  
+  else
+  {
+    lcd.print("Wrong Password");
+    delay(3000);
+    lcd.clear();
+    arm_password.reset();
+    disarm_password.reset();
+  lcd.print("Type Password");
+  lcd.setCursor(0,1);
+  lcd.print("To Disarm System");
+    //add code to run if it did not work
+  }
+}
+
+
 void setOffSystem()
 {
-   val = digitalRead(inputPin);  // read input value
+     // read input value
     
   if (val == HIGH) 
-  {            // check if the input is HIGH
+  {      
+   val = digitalRead(inputPin);    // check if the input is HIGH
     digitalWrite(ledPin, HIGH);  // turn LED ON
     playTone(300, 160);
     delay(150);
+     lcd.clear();
+      lcd.print("Motion detected!");
+  }
 
-    if (pirState == LOW) 
+   /* if (pirState == LOW) 
     {
       // we have just turned on
       lcd.clear();
@@ -150,10 +201,10 @@ void setOffSystem()
       
       // We only want to print on the output change, not state
       pirState = HIGH;
-    }
-  } 
+    }*/
+   
   
-  else 
+ /* else 
     {
       digitalWrite(ledPin, LOW); // turn LED OFF
       playTone(0, 0);
@@ -166,6 +217,21 @@ void setOffSystem()
       // We only want to print on the output change, not state
       pirState = LOW;
     }
-  }       
+  } */      
+}
+
+void disarmSystem()
+{
+  digitalWrite(ledPin, LOW); // turn LED OFF
+      playTone(0, 0);
+      delay(300);    
+      if (pirState == HIGH)
+      {
+      lcd.print("System Disarmed!");
+      delay(5000);
+      lcd.clear();
+      // We only want to print on the output change, not state
+      pirState = LOW;
+      }
 }
 
