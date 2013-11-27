@@ -5,7 +5,7 @@
 #include <LiquidCrystal.h>
 #include <Password.h> 
 #include <Keypad.h> 
-#include <pitches.h>
+
 
 const byte ROWS = 4; // Four rows
 const byte COLS = 3; //  columns
@@ -27,11 +27,14 @@ int inputPin = 9;               // choose the input pin (for PIR sensor)
 int pirState = LOW;             // we start, assuming no motion detected
 int val = 0;                    // variable for reading the pin status
 int pinSpeaker = 10;           //Set up a speaker on a PWM pin (digital 9, 10, or 11)
+int inputPin2 = 11;
+int Val2 = 0;
 
 
 LiquidCrystal lcd(A5, A4, A3, A2, A1, A0);
 Password arm_password = Password( "1234" );
 Password disarm_password = Password("4321");
+
 
 // Create the Keypad
 Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
@@ -44,10 +47,13 @@ void setup()
   pinMode(inputPin, INPUT);     // declare sensor as input
   pinMode(pinSpeaker, OUTPUT);
   
+   pinMode(inputPin2, INPUT); 
+  
   lcd.begin(16, 2); 
   lcd.print("Type Password");
   lcd.setCursor(0,1);
   lcd.print("To Arm System");
+  Serial.begin(9600);
  
  }
 
@@ -55,6 +61,8 @@ void loop()
 {   
     
      keypad.getKey();
+      Val2 = digitalRead(inputPin2);
+      Serial.println(inputPin2);
       
 } //end of main loop
 
@@ -86,13 +94,15 @@ void keypadEvent(KeypadEvent eKey)
         lcd.clear();
         lcd.setCursor(0,1);
 	lcd.print(eKey);
+   
 	switch (eKey)
         {
 	  case '*': check_armed_password(); break;
           
 	  case '#': check_disarm_password(); break;
+
 	  default: arm_password.append(eKey);
-                    disarm_password.append(eKey);
+                   disarm_password.append(eKey);
         }
   }
 }
@@ -110,15 +120,14 @@ void check_armed_password()
     //Add code to run if it works
     while (arm_password.evaluate() )
     {
-      val = digitalRead(inputPin);  // check if the input is HIGH
+       val = digitalRead(inputPin);  // check if the input is HIGH
       
        if (val == HIGH) 
         {        
-            digitalWrite(ledPin, HIGH);  // turn LED ON
-          //  playTone(300, 160);   
-     
-            delay(150);
-             lcd.clear();
+              digitalWrite(ledPin, HIGH);  // turn LED ON           
+              tone(pinSpeaker, 160);   
+              delay(150);
+              lcd.clear();
               lcd.print("Motion detected!");
               delay(3000);
               lcd.setCursor(0,1);
@@ -136,9 +145,9 @@ void check_armed_password()
     lcd.clear();
     arm_password.reset();
     disarm_password.reset();
-  lcd.print("Type Password");
-  lcd.setCursor(0,1);
-  lcd.print("To Arm System");
+    lcd.print("Type Password");
+    lcd.setCursor(0,1);
+    lcd.print("To Arm System");
     //add code to run if it did not work
   }
 }
@@ -149,19 +158,18 @@ void check_disarm_password()
   if (disarm_password.evaluate())
   {
     digitalWrite(ledPin, LOW);
-    digitalWrite(pinSpeaker, LOW);
+    noTone(pinSpeaker);
     lcd.print("Success!");
     delay(3000);
     lcd.clear();
     lcd.print("System Disarmed");
-   delay(3000); 
-   lcd.clear();
-   arm_password.reset();
+    delay(3000); 
+    lcd.clear();
+    arm_password.reset();
     disarm_password.reset();
     lcd.print("Type Password");
-  lcd.setCursor(0,1);
-  lcd.print("To Arm System");
-      
+    lcd.setCursor(0,1);
+    lcd.print("To Arm System");    
   }
   
   else
@@ -171,9 +179,9 @@ void check_disarm_password()
     lcd.clear();
     arm_password.reset();
     disarm_password.reset();
-  lcd.print("Type Password");
-  lcd.setCursor(0,1);
-  lcd.print("To Disarm System");
+    lcd.print("Type Password");
+    lcd.setCursor(0,1);
+    lcd.print("To Disarm System");
     //add code to run if it did not work
   }
 }
