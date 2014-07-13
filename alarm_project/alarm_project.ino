@@ -28,7 +28,7 @@ int pirState = LOW;             // we start, assuming no motion detected
 int val = 0;                    // variable for reading the pin status
 int pinSpeaker = 10;           //Set up a speaker on a PWM pin (digital 9, 10, or 11)
 int inputPin2 = 11;
-int Val2 = 0;
+int sensorPin = 5;
 
 
 LiquidCrystal lcd(A5, A4, A3, A2, A1, A0);
@@ -46,8 +46,8 @@ void setup()
   pinMode(ledPin, OUTPUT);      // declare LED as output
   pinMode(inputPin, INPUT);     // declare sensor as input
   pinMode(pinSpeaker, OUTPUT);
+  pinMode(sensorPin,INPUT);
   
-   pinMode(inputPin2, INPUT); 
   
   lcd.begin(16, 2); 
   lcd.print("Type Password");
@@ -61,8 +61,9 @@ void loop()
 {   
     
      keypad.getKey();
-      Val2 = digitalRead(inputPin2);
-      Serial.println(inputPin2);
+    int  Val2 = analogRead(sensorPin);
+      Serial.println(sensorPin);
+      delay(1000);
       
 } //end of main loop
 
